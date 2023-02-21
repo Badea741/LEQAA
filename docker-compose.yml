@@ -3,6 +3,7 @@
 version: '3.4'
 
 services:
+=======
   frontend:
     image: frontend-dev
     build:
@@ -64,6 +65,8 @@ services:
       - 5002:5002
     depends_on:
       - authenticationdb
+    volumes:
+      - ./Authentication:/src/Authentication
     healthcheck:
       test: ["CMD","curl","-f","http://authenticationdb:3308"]
       timeout: 1s
