@@ -3,21 +3,22 @@
 version: '3.4'
 
 services:
-  authentication2:
+  authentication:
     build:
       context: .
       dockerfile: Authentication/Authentication.Entry/Dockerfile
     environment:
       - ConnectionStrings__Default=server=authenticationdb;Port=3308;database=LeqaaAuthentication;Uid=root;Pwd=2510203121;
       - Uri=http://localhost:5002
+      - RabbitMQ__Host=rabbitmq
     ports:
       - 5002:5002
       - 5003:5003
     depends_on:
       - authenticationdb
       - rabbitmq
-    # volumes:
-      # - ./Authentication:/src/Authentication
+    volumes:
+      - ./Authentication:/src/Authentication
     healthcheck:
       test: ["CMD","curl","-f","http://authenticationdb:3308"]
       timeout: 1s
@@ -44,7 +45,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
-    hostname: "rabbitmq"
+    hostname: rabbitmq
     environment:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
@@ -55,6 +56,55 @@ services:
       - "25672:25672"
       - "15671:15671"
       - "15672:15672"
+    networks:
+      - network1
+    
+  businessdomain:
+    image: bussinesslogic-dev
+    build:
+      context: .
+      dockerfile: BusinessDomain/BusinessLogic.Entry/Dockerfile
+    environment:
+      - ConnectionStrings__Default=Server=businessdomaindb;Port=3307;Database=BusinessLogicDb;Uid=root;Pwd=2510203121;
+      - RabbitMQConnection__Host=rabbitmq
+    ports:
+      - 5004:5004
+    volumes:
+      - ./BusinessDomain:/src/BusinessDomain
+    depends_on:
+      - businessdomaindb
+    healthcheck:
+      test: ["CMD","curl","-f","http://businessdomaindb:3307",";", "curl","-f","http://rabbitmq:5672"]
+      timeout: 1s
+      interval: 1s
+      retries: 10
+    
+    networks:
+      - network1
+
+  businessdomainunittests:
+    image: unittests:v1.0
+    build:
+      context: .
+      dockerfile: BusinessDomain/BusinessLogic.Tests/UnitTests/Dockerfile
+    volumes:
+      - ./BusinessDomain/BusinessLogic.Tests/UnitTests:/src/BusinessDomain/BusinessLogic.Tests/UnitTests
+    networks:
+      - network1
+
+  businessdomaindb:
+    image: mysql/mysql-server:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=2510203121
+      - MYSQL_DATABASE=BusinessLogicDb
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=2510203121
+      - MYSQL_TCP_PORT=3307
+
+    volumes:
+      - businessdbvolume:/var/lib/mysql
+    ports:
+      - 3307:3307
     networks:
       - network1
     
