@@ -43,7 +43,7 @@ public class ChannelController : BaseController
 
 
     [HttpGet]
-    // [HasPermission(Permission.CanViewChannels)]
+    [HasPermission(Permission.CanViewChannels)]
 
     public async Task<IActionResult> ViewChannels([FromQuery] int pageNumber, int pageSize)
     {

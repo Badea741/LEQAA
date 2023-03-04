@@ -53,8 +53,6 @@ public class UpdateChannelCommandHandler : IHandler<UpdateChannelCommand, ErrorO
         {
             return DomainErrors.Channel.InvalidChannel;
         }
-
         return channel.Adapt<ChannelWriteModel>();
-
     }
 }
