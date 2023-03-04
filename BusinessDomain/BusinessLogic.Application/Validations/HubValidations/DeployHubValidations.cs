@@ -2,9 +2,9 @@ using BusinessLogic.Application.Commands.Hubs.DeployHub;
 using FluentValidation;
 
 namespace BusinessLogic.Application.Validations.HubValidations;
-public class HubValidator : AbstractValidator<DeployHubCommand>
+public class DeployHubValidator : AbstractValidator<DeployHubCommand>
 {
-    public HubValidator()
+    public DeployHubValidator()
     {
         RuleFor(h => h.Name)
         .NotEmpty()
