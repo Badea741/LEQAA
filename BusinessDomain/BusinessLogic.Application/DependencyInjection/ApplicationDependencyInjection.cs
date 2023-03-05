@@ -9,7 +9,7 @@ public static class ApplicationDependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddValidatorsFromAssembly(typeof(DeployHubValidator).Assembly);
+        services.AddValidatorsFromAssembly(typeof(HubValidator).Assembly);
         services.AddMediatR(typeof(DeployHubCommand).Assembly);
         return services;
     }
