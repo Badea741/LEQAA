@@ -18,6 +18,9 @@ using BusinessLogic.Application.Commands.Users.FollowUser;
 using ErrorOr;
 using BusinessLogic.Application.Queries.Users.ViewRelatedUsers;
 using BusinessLogic.Application.Queries.Users.ViewUser;
+using BusinessLogic.Application.Models.Hubs;
+using BusinessLogic.Application.Commands.Users.JoinHub;
+using BusinessLogic.Infrastructure.Authorization.Enums;
 
 namespace BusinessLogic.Presentation.Controllers;
 [Route("api/v1/[controller]/[action]")]
@@ -169,6 +172,20 @@ public class UserController : BaseController
             users => Ok(users),
             errors => Problem(errors)
         );
+    }
+    [HttpPut]
+    [HasPermission(Permission.CanJoinHub)]
+    public async Task<IActionResult> JoinHub(JoinHubModel joinHubModel)
+    {
+        string username = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)!.Value;
+
+        var joinHubCommand = new JoinHubCommand(username, joinHubModel.Id);
+        var result = await _sender.Send(joinHubCommand);
+        return result.Match(
+            hub => Ok(hub),
+            errors => Problem(errors)
+        );
+
     }
 
 }
