@@ -1,9 +1,11 @@
-﻿using BusinessLogic.Application.CommandInterfaces;
+using BusinessLogic.Application.CommandInterfaces;
 using BusinessLogic.Application.Commands.Channels.CreateChannel;
 using BusinessLogic.Application.Interfaces;
 using BusinessLogic.Application.Models.Channels;
 using BusinessLogic.Application.Models.Hubs;
+using BusinessLogic.Application.Models.Posts;
 using BusinessLogic.Application.Queries.Users.ViewUserHubs;
+using BusinessLogic.Application.Queries.Users.ViewUserPosts;
 using BusinessLogic.Domain;
 using BusinessLogic.Domain.DomainErrors;
 using ErrorOr;
@@ -16,9 +18,9 @@ using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace BusinessLogic.Application.Queries.Users.ViewUserHubs
+namespace BusinessLogic.Application.Queries.Users.ViewUserPosts
 {
-public class ViewUserPostsQueryHandler : IHandler<ViewUserHubsQuery, ErrorOr<List<HubReadModel>>>
+    public class ViewUserPostsQueryHandler : IHandler<ViewUserPostsQuery, ErrorOr<List<PostReadModel>>>
     {
         private readonly IChannelRepository _channelRepository;
         private readonly IHubRepository _hubRepository;
@@ -36,29 +38,30 @@ public class ViewUserPostsQueryHandler : IHandler<ViewUserHubsQuery, ErrorOr<Lis
             _userRepository = userRepository;
             _userChannelRepository = userChannelRepository;
         }
-        public async Task<ErrorOr<List<HubReadModel>>> Handle(ViewUserHubsQuery request, CancellationToken cancellationToken)
+        public async Task<ErrorOr<List<PostReadModel>>> Handle(ViewUserPostsQuery request, CancellationToken cancellationToken)
         {
 
-            var user = await _userRepository.GetUserAsync(u => u.UserName == request.userName, "Hubs");
+            var user = (await _userRepository.GetAsync(u => u.UserName == request.userName, null!, "Posts")).FirstOrDefault();
             if (user is null)
             {
+                //user not found
                 return DomainErrors.User.NotFound;
             }
 
-            var Hubs=user.Hubs.ToList();
+            var posts = user.Posts.ToList();
 
-            
-  
-       
-            if(Hubs.Count== 0)
+
+
+
+            if (posts.Count == 0)
             {
-                return DomainErrors.Hub.NotFound;
+                return DomainErrors.Post.NotFound;
             }
 
-         
 
-            return Hubs
-            .Adapt<List<HubReadModel>>();
+
+            return posts
+            .Adapt<List<PostReadModel>>();
 
 
 
@@ -67,5 +70,5 @@ public class ViewUserPostsQueryHandler : IHandler<ViewUserHubsQuery, ErrorOr<Lis
 
 
     }
-    
+
 }
