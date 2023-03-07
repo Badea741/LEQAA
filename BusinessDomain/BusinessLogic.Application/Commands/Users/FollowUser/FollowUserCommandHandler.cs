@@ -1,7 +1,6 @@
 using BusinessLogic.Application.CommandInterfaces;
 using BusinessLogic.Application.Interfaces;
 using BusinessLogic.Application.Models.Users;
-using BusinessLogic.Domain;
 using BusinessLogic.Domain.DomainErrors;
 using ErrorOr;
 using Mapster;
@@ -22,20 +21,32 @@ public class FollowUserCommandHandler : IHandler<FollowUserCommand, ErrorOr<User
     {
         var followedUser = (await _userRepository.GetAsync(u => u.UserName == request.FollowedUser)).FirstOrDefault();
         var follower = (await _userRepository.GetAsync(u => u.UserName == request.Follower)).FirstOrDefault();
+
         if ((follower is null) || (followedUser is null))
         {
             return DomainErrors.User.NotFound;
         }
+
         var followRelation = (await _userUserRepository
         .GetAsync(uu =>
          uu.FollowerId == follower.Id &&
          uu.FollowedId == followedUser.Id))
         .FirstOrDefault();
+
         if (followRelation is not null)
         {
-            return DomainErrors.UserUser.AlreadyFollowed;
+            await _userUserRepository.RemoveAsync(uu =>
+                uu.FollowerId == follower.Id &&
+                uu.FollowedId == followedUser.Id);
+            if (await _userRepository.SaveAsync(cancellationToken) == 0)
+            {
+                return DomainErrors.User.InvalidFollowedUser;
+            }
+            return followedUser.Adapt<UserReadModel>();
         }
+
         follower.FollowedUsers.Add(followedUser);
+
         if (await _userRepository.SaveAsync(cancellationToken) == 0)
         {
             return DomainErrors.User.InvalidFollowedUser;
