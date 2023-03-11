@@ -7,20 +7,22 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using BusinessLogic.Application.Queries.Users.ViewUserProfile;
 using BusinessLogic.Application.Models.Users;
-using BusinessLogic.Application.Queries.channels.ViewChannels;
 using BusinessLogic.Infrastructure.Authorization;
 using BusinessLogic.Application.Queries.Users.ViewUserChannels;
-using Microsoft.AspNetCore.Identity;
-using System.Runtime.InteropServices;
 using BusinessLogic.Application.Queries.Users.ViewUserHubs;
 using BusinessLogic.Application.Queries.Users.ViewUserPosts;
 using BusinessLogic.Application.Commands.Users.FollowUser;
 using ErrorOr;
 using BusinessLogic.Application.Queries.Users.ViewRelatedUsers;
 using BusinessLogic.Application.Queries.Users.ViewUser;
-using BusinessLogic.Application.Models.Hubs;
+using BusinessLogic.Application.Queries.Hubs.GetHubsWithoutUserHubs;
 using BusinessLogic.Application.Commands.Users.JoinHub;
+using BusinessLogic.Application.Models.Hubs;
 using BusinessLogic.Infrastructure.Authorization.Enums;
+using BusinessLogic.Application.Commands.Users.AddUserByUser;
+using BusinessLogic.Application.Commands.Users.UpdateUserRole;
+using BusinessLogic.Domain.SharedEnums;
+using BusinessLogic.Application.Queries.Users.ViewRecentActivities;
 
 namespace BusinessLogic.Presentation.Controllers;
 [Route("api/v1/[controller]/[action]")]
@@ -101,6 +103,7 @@ public class UserController : BaseController
         string username = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)!.Value;
 
         if (string.IsNullOrEmpty(username))
+
         {
             return BadRequest(username);
         }
@@ -142,7 +145,7 @@ public class UserController : BaseController
 
         var followUserCommand = new FollowUserCommand(
             FollowedUser: followUserModel.FollowedUserName,
-            Follower: followerUsername);
+            UserName: followerUsername);
 
         ErrorOr<UserReadModel> result = await _sender.Send(followUserCommand);
         return result.Match(
@@ -167,12 +170,14 @@ public class UserController : BaseController
     [Authorize]
     public async Task<IActionResult> ViewUser([FromQuery] ViewUserQuery viewUserQuery)
     {
+
         var result = await _sender.Send(viewUserQuery);
         return result.Match(
             users => Ok(users),
             errors => Problem(errors)
         );
     }
+
     [HttpPut]
     [HasPermission(Permission.CanJoinHub)]
     public async Task<IActionResult> JoinHub(JoinHubModel joinHubModel)
@@ -186,6 +191,59 @@ public class UserController : BaseController
             errors => Problem(errors)
         );
 
+    }
+
+
+    [HttpGet]
+    public async Task<IActionResult> GetHubsWithoutUserHubs()
+    {
+        string username = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)!.Value;
+        var model = new GetHubsWithoutUserHubsQuery(username);
+        var result = await _sender.Send(model);
+        return result.Match(
+            users => Ok(users),
+            errors => Problem(errors)
+        );
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> AddUserByUserToHub(AddUserByUserCommand addUserByUserCommand)
+    {
+
+        var result = await _sender.Send(addUserByUserCommand);
+        return result.Match(
+            users => Ok(users),
+            errors => Problem(errors)
+        );
+    }
+
+
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> UpdateUserRole(string UsertoUpdate, GroupRole newRole)
+    {
+        string usernameWhoUpdate = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)!.Value;
+        var updateUserRoleCommand = new UpdateUserRoleCommand(usernameWhoUpdate, UsertoUpdate, newRole);
+
+        var result = await _sender.Send(updateUserRoleCommand);
+
+        return result.Match(
+            users => Ok(users),
+            errors => Problem(errors)
+        );
+    }
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> ViewRecentActivities(int pageNumber = 1, int pageSize = 20)
+    {
+        string username = User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)!.Value;
+        var viewRecentActivitiesQuery = new ViewUserRecentActivitiesQuery(pageNumber, pageSize, username);
+
+        var result = await _sender.Send(viewRecentActivitiesQuery);
+
+        return Ok(result);
     }
 
 }

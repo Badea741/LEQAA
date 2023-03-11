@@ -11,7 +11,12 @@ public class User : BaseEntity
         Hubs = new HashSet<Hub>();
         Channels = new HashSet<Channel>();
         Posts = new HashSet<Post>();
-        Announcements = new HashSet<Announcement>();
+        HubAnnouncements = new HashSet<HubAnnouncement>();
+        ChannelAnnouncements = new HashSet<ChannelAnnouncement>();
+        PinnedChannels = new HashSet<PinnedChannel>();
+
+
+
         Plans = new List<Plan.Plan>();
     }
     public User(string name, string email, string username, Gender gender)
@@ -22,7 +27,13 @@ public class User : BaseEntity
         Hubs = new HashSet<Hub>();
         Channels = new HashSet<Channel>();
         Posts = new HashSet<Post>();
-        Announcements = new HashSet<Announcement>();
+        HubAnnouncements = new HashSet<HubAnnouncement>();
+        ChannelAnnouncements = new HashSet<ChannelAnnouncement>();
+        PinnedChannels = new HashSet<PinnedChannel>();
+
+
+        /* UserChannelAnnoucement = new HashSet<UserChannelAnnoucement>();*/
+
         Plans = new List<Plan.Plan>();
 
         Name = name;
@@ -37,12 +48,16 @@ public class User : BaseEntity
     public bool IsFollowed { get; set; }
     public Gender Gender { get; set; }
     public byte[]? ProfilePicture { get; set; }
-    public virtual ICollection<Room>? Rooms { get; set; }
+    public virtual ICollection<Room> Rooms { get; set; }
     public virtual ICollection<Channel> Channels { get; set; }
     public virtual ICollection<Hub> Hubs { get; set; }
     public virtual ICollection<Post> Posts { get; set; }
-    public virtual ICollection<Announcement> Announcements { get; set; }
+    public virtual ICollection<HubAnnouncement> HubAnnouncements { get; set; }
+    public virtual ICollection<ChannelAnnouncement> ChannelAnnouncements { get; set; }
+
     public virtual ICollection<Plan.Plan> Plans { get; set; }
     public virtual ICollection<User> Followers { get; set; }
     public virtual ICollection<User> FollowedUsers { get; set; }
+    public virtual ICollection<PinnedChannel> PinnedChannels { get; set; }
+
 }

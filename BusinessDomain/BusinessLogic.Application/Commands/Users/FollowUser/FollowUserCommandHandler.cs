@@ -20,9 +20,9 @@ public class FollowUserCommandHandler : IHandler<FollowUserCommand, ErrorOr<User
     public async Task<ErrorOr<UserReadModel>> Handle(FollowUserCommand request, CancellationToken cancellationToken)
     {
         var followedUser = (await _userRepository.GetAsync(u => u.UserName == request.FollowedUser)).FirstOrDefault();
-        var follower = (await _userRepository.GetAsync(u => u.UserName == request.Follower)).FirstOrDefault();
+        var follower = (await _userRepository.GetAsync(u => u.UserName == request.UserName)).FirstOrDefault()!;
 
-        if ((follower is null) || (followedUser is null))
+        if ((followedUser is null))
         {
             return DomainErrors.User.NotFound;
         }
